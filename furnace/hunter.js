@@ -62,8 +62,10 @@ const willHack = ({
 
     const hunterSec = ns.getHackingLevel();
     const sec = ns.getServerMinSecurityLevel(host);
-    const hunterSecPerc = sec / hunterSec;
 
+    if (sec === 1) return true;
+
+    const hunterSecPerc = sec / hunterSec;
     return hunterSecPerc <= hunterSecPercThreshold;
 };
 
