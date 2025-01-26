@@ -85,7 +85,8 @@ const canHack = ({
         httpPortOpen,
         sqlPortOpen
     } = ns.getServer(host);
-    sshPortOpen &&ftpPortOpen && smtpPortOpen && httpPortOpen && sqlPortOpen && ns.nuke(host);
-  
+    const open = sshPortOpen + ftpPortOpen + smtpPortOpen + httpPortOpen + sqlPortOpen;
+
+    open >= ns.getServerNumPortsRequired(host) && ns.nuke(host);
     return ns.hasRootAccess(host);
 };

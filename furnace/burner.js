@@ -10,7 +10,7 @@ export const burn = async ({
     hunterSecPercThreshold = 0.5,
     secPercThreshold = 0.99,
     fundPercThreshold = 0.99,
-    hackPerc = 1,
+    hackPerc = 0.99,
     backOff = 500
 }) => {
 
@@ -18,6 +18,12 @@ export const burn = async ({
         ns,
         hunterSecPercThreshold
     });
+
+    if (await ignite({
+        ns,
+        targets,
+        hackPerc
+    })) return;
 
     if (await burnSec({
         ns,
@@ -29,12 +35,6 @@ export const burn = async ({
         ns,
         targets,
         fundPercThreshold
-    })) return;
-
-    if (await ignite({
-        ns,
-        targets,
-        hackPerc
     })) return;
 
     await ns.sleep(backOff);
@@ -59,7 +59,7 @@ const burnSec = async ({
     if (secPerc > secPercThreshold) return;
 
     const time = ns.getWeakenTime(hostname);
-    ns.print(`Weakening ${hostname}: ${ns.formatPercent(secPerc)}, ${sec} / ${minSec} (${ns.tFormat(time)})...`);
+    ns.print(`Weakening ${hostname}: ${ns.formatPercent(secPerc)}, ${ns.formatNumber(sec)} / ${minSec} (${ns.tFormat(time)})...`);
     await ns.weaken(hostname);
     return true;
 };
@@ -83,7 +83,7 @@ const kindleFund = async ({
     if (fundPerc > fundPercThreshold) return;
 
     const time = ns.getGrowTime(hostname);
-    ns.print(`Funding ${hostname}: ${ns.formatPercent(fundPerc)}, ${fund} / ${maxFund} (${ns.tFormat(time)})...`);
+    ns.print(`Funding ${hostname}: ${ns.formatPercent(fundPerc)}, ${ns.formatNumber(fund)} / ${maxFund} (${ns.tFormat(time)})...`);
     await ns.grow(hostname);
     return true;
 };
@@ -107,7 +107,7 @@ const ignite = async ({
     if (fundPerc < hackPerc) return;
 
     const time = ns.getHackTime(hostname);
-    ns.print(`Hacking ${hostname}: ${ns.formatPercent(fundPerc)}, ${fund} / ${maxFund} (${ns.tFormat(time)})...`);
+    ns.print(`Hacking ${hostname}: ${ns.formatPercent(fundPerc)}, ${ns.formatNumber(fund)} / ${maxFund} (${ns.tFormat(time)})...`);
     await ns.hack(hostname);
     return true;
 }
