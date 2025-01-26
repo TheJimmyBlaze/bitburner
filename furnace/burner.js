@@ -18,55 +18,53 @@ export const burn = async ({
         ns,
         hunterSecPercThreshold
     });
+    const target = targets[Math.floor(Math.random() * targets.length)];
 
     if (await ignite({
         ns,
-        targets,
+        target,
         hackPerc
     })) return;
 
     if (await burnSec({
         ns,
-        targets,
+        target,
         secPercThreshold
     })) return;
 
     if (await kindleFund({
         ns,
-        targets,
+        target,
         fundPercThreshold
     })) return;
 
     await ns.sleep(backOff);
 };
 
-const burnSec = async ({
+const ignite = async ({
     ns,
-    targets,
-    secPercThreshold
+    target,
+    hackPerc
 }) => {
 
     const {
         hostname,
-        hackDifficulty: sec,
-        minDifficulty: minSec
-    } = targets.sort((a, b) => (
-        a.minDifficulty / a.hackDifficulty -
-        b.minDifficulty / b.hackDifficulty
-    ))[0];
+        moneyAvailable: fund,
+        moneyMax: maxFund
+    } = target;
 
-    const secPerc = minSec / sec;
-    if (secPerc > secPercThreshold) return;
+    const fundPerc = fund / maxFund;
+    if (fundPerc < hackPerc) return;
 
-    const time = ns.getWeakenTime(hostname);
-    ns.print(`Weakening ${hostname}: ${ns.formatPercent(secPerc)}, ${ns.formatNumber(sec)} / ${minSec} (${ns.tFormat(time)})...`);
-    await ns.weaken(hostname);
+    const time = ns.getHackTime(hostname);
+    ns.print(`Hacking ${hostname}: ${ns.formatPercent(fundPerc)}, ${ns.formatNumber(fund)} / ${maxFund} (${ns.tFormat(time)})...`);
+    await ns.hack(hostname);
     return true;
 };
 
 const kindleFund = async ({
     ns,
-    targets,
+    target,
     fundPercThreshold
 }) => {
 
@@ -74,10 +72,7 @@ const kindleFund = async ({
         hostname,
         moneyAvailable: fund,
         moneyMax: maxFund
-    } = targets.sort((a, b) => (
-        a.moneyAvailable / a.moneyMax -
-        b.moneyAvailable / b.moneyMax
-    ))[0];
+    } = target
 
     const fundPerc = fund / maxFund;
     if (fundPerc > fundPercThreshold) return;
@@ -88,26 +83,23 @@ const kindleFund = async ({
     return true;
 };
 
-const ignite = async ({
+const burnSec = async ({
     ns,
-    targets,
-    hackPerc
+    target,
+    secPercThreshold
 }) => {
 
     const {
         hostname,
-        moneyAvailable: fund,
-        moneyMax: maxFund
-    } = targets.sort((a, b) => (
-        b.moneyAvailable / b.moneyMax -
-        a.moneyAvailable / a.moneyMax
-    ))[0];
+        hackDifficulty: sec,
+        minDifficulty: minSec
+    } = target;
 
-    const fundPerc = fund / maxFund;
-    if (fundPerc < hackPerc) return;
+    const secPerc = minSec / sec;
+    if (secPerc > secPercThreshold) return;
 
-    const time = ns.getHackTime(hostname);
-    ns.print(`Hacking ${hostname}: ${ns.formatPercent(fundPerc)}, ${ns.formatNumber(fund)} / ${maxFund} (${ns.tFormat(time)})...`);
-    await ns.hack(hostname);
+    const time = ns.getWeakenTime(hostname);
+    ns.print(`Weakening ${hostname}: ${ns.formatPercent(secPerc)}, ${ns.formatNumber(sec)} / ${minSec} (${ns.tFormat(time)})...`);
+    await ns.weaken(hostname);
     return true;
-}
+};
