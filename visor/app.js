@@ -30,7 +30,7 @@ const update = ns => {
         options: crawlOptions
     });
 
-    ns.resizeTail(960, 29 * (targets.length + 1));
+    ns.resizeTail(960, 28 * (targets.length + 1));
     ns.print(`  ${''.padEnd(24)}  ${'Security'.padEnd(18)}  ${'Funding'.padEnd(18)}  ${'Level'.padEnd(6)}  ${'Sec'.padEnd(6)}  ${'Fund'.padEnd(6)}  ${'Hack'.padEnd(6)}`);
     targets.forEach(target => draw(ns, target));
 };

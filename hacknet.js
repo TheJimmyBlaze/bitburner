@@ -1,11 +1,15 @@
 
 export const main = async ns => {
 
-  while (true) {
+  ns.disableLog('ALL');
+  ns.tail();
+  ns.resizeTail(640, 500);
 
-    await ns.sleep(0);
-    ns.print('upgrading...');
+  ns.print('Building Hacknet...');
+
+  while (true) {
     await upgrade(ns);
+    await ns.sleep(0);
   }
 };
 
@@ -13,50 +17,58 @@ const upgrade = async ns => {
 
   let best = null;
   
-  if (ns.hacknet.numNodes() < ns.hacknet.maxNumNodes()) {
+  const numNodes = ns.hacknet.numNodes()
+  if (numNodes < ns.hacknet.maxNumNodes()) {
     best = {
-      name: 'new',
+      index: numNodes,
+      upgradeName: 'NEW',
       cost: ns.hacknet.getPurchaseNodeCost(),
       upgrade: async () => await ns.hacknet.purchaseNode()
     };
   }
 
-  for (let i = 0; i < ns.hacknet.numNodes(); i ++) {
+  for (let i = 0; i < numNodes; i ++) {
 
     const next = nodeCost(ns, i);
     if (!best || next.cost < best.cost) {
       best = next;
     }
   }
-  ns.print(`best upgrade: ${best.name}, for cost: ${best.cost}`);
+  ns.print(`Upgrading: hacknet-node-${best.index} to ${best.upgradeName} for \$${ns.formatNumber(best.cost)}...`);
   
   let money = ns.getServerMoneyAvailable('home');
   while (money < best.cost) {
-    ns.print(`upgrade requires: \$${best.cost - money}`);
     
     await ns.sleep(1000);
     money = ns.getServerMoneyAvailable('home');
   }
-
-  ns.print(`purchasing upgrade...`);
   await best.upgrade();
 };
 
 const nodeCost = (ns, i) => {
 
+  const {
+    level,
+    ram,
+    cores
+  } = ns.hacknet.getNodeStats(i);
+
   const specs = [
     {
-      name: `${i}-level`,
+      index: i,
+      upgradeName: `level ${level + 1}`,
       cost: ns.hacknet.getLevelUpgradeCost(i, 1),
       upgrade: async () => await ns.hacknet.upgradeLevel(i, 1)
     },
     {
-      name: `${i}-ram`,
+      index: i,
+      upgradeName: `ram ${ram + 1}`,
       cost: ns.hacknet.getRamUpgradeCost(i, 1),
       upgrade: async () => await ns.hacknet.upgradeRam(i, 1)
     },
     {
-      name: `${i}-core`,
+      index: i,
+      upgradeName: `core ${cores + 1}`,
       cost: ns.hacknet.getCoreUpgradeCost(i, 1),
       upgrade: async () => await ns.hacknet.upgradeCore(i, 1)
     }
