@@ -1,5 +1,5 @@
 
-import { hunt } from './hunter';
+import { crawl } from '../lib/crawler';
 
 export const main = async ns => {
     await burn({ ns });
@@ -7,54 +7,53 @@ export const main = async ns => {
 
 export const burn = async ({
     ns,
-    hunterSecPercThreshold = 0.5,
-    secPercThreshold = 0.99,
-    fundPercThreshold = 0.99,
-    hackPerc = 0.99,
+    maxSecurityPercent = 0.99,
+    maxFundPercent = 0.99,
+    minHackPercent = 0.99,
+    crawlOptions,
     backOff = 500
 }) => {
 
-    const targets = hunt({
-        ns,
-        hunterSecPercThreshold
-    });
+    const targets = crawl({ns, options: crawlOptions});
     const target = targets[Math.floor(Math.random() * targets.length)];
 
-    if (await ignite({
-        ns,
-        target,
-        hackPerc
-    })) return;
+    const server = ns.getServer(target);
 
-    if (await burnSec({
+    if (await ignite(
         ns,
-        target,
-        secPercThreshold
-    })) return;
+        server,
+        minHackPercent
+    )) return;
 
-    if (await kindleFund({
+    if (await burnSec(
         ns,
-        target,
-        fundPercThreshold
-    })) return;
+        server,
+        maxSecurityPercent
+    )) return;
+
+    if (await kindleFund(
+        ns,
+        server,
+        maxFundPercent
+    )) return;
 
     await ns.sleep(backOff);
 };
 
-const ignite = async ({
+const ignite = async (
     ns,
-    target,
-    hackPerc
-}) => {
+    server,
+    minPercent
+) => {
 
     const {
         hostname,
         moneyAvailable: fund,
         moneyMax: maxFund
-    } = target;
+    } = server;
 
     const fundPerc = fund / maxFund;
-    if (fundPerc < hackPerc) return;
+    if (fundPerc < minPercent) return;
 
     const time = ns.getHackTime(hostname);
     ns.print(`Hacking ${hostname}: ${ns.formatPercent(fundPerc)}, ${ns.formatNumber(fund)} / ${maxFund} (${ns.tFormat(time)})...`);
@@ -62,20 +61,20 @@ const ignite = async ({
     return true;
 };
 
-const kindleFund = async ({
+const kindleFund = async (
     ns,
-    target,
-    fundPercThreshold
-}) => {
+    server,
+    maxPercent
+) => {
 
     const {
         hostname,
         moneyAvailable: fund,
         moneyMax: maxFund
-    } = target
+    } = server
 
     const fundPerc = fund / maxFund;
-    if (fundPerc > fundPercThreshold) return;
+    if (fundPerc > maxPercent) return;
 
     const time = ns.getGrowTime(hostname);
     ns.print(`Funding ${hostname}: ${ns.formatPercent(fundPerc)}, ${ns.formatNumber(fund)} / ${maxFund} (${ns.tFormat(time)})...`);
@@ -83,20 +82,20 @@ const kindleFund = async ({
     return true;
 };
 
-const burnSec = async ({
+const burnSec = async (
     ns,
-    target,
-    secPercThreshold
-}) => {
+    server,
+    maxPercent
+) => {
 
     const {
         hostname,
         hackDifficulty: sec,
         minDifficulty: minSec
-    } = target;
+    } = server;
 
     const secPerc = minSec / sec;
-    if (secPerc > secPercThreshold) return;
+    if (secPerc > maxPercent) return;
 
     const time = ns.getWeakenTime(hostname);
     ns.print(`Weakening ${hostname}: ${ns.formatPercent(secPerc)}, ${ns.formatNumber(sec)} / ${minSec} (${ns.tFormat(time)})...`);
