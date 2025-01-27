@@ -4,7 +4,6 @@ import { analyze } from '../lib/analyzer';
 export const main = async ns => {
 
     ns.disableLog('ALL');
-
     ns.tail();
 
     while(true) {

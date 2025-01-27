@@ -1,18 +1,26 @@
+import { deploy } from './lib/deploy';
 
 export const main = async ns => {
 
   ns.disableLog('ALL');
+  ns.tail();
+
+  const script = ns.args[0];
+  if (!script) {
+    ns.tprint('no script provided as arg[0]');
+    return;
+  }
 
   while (true) {
 
-    if (await buy(ns)) return;
+    if (await buy(ns, script)) continue;
 
-    await upgrade(ns);
+    await upgrade(ns, script);
     await ns.sleep(0);
   }
 };
 
-const buy = async ns => {
+const buy = async (ns, script) => {
 
   if (ns.getPurchasedServers().length === ns.getPurchasedServerLimit()) return;
 
@@ -30,15 +38,20 @@ const buy = async ns => {
   const host = `embrnet-${ns.getPurchasedServers().length}`;
   ns.print(`Purchasing: ${host}`);
   ns.purchaseServer(host, baseRam);
-  deploy(ns, host);
+
+  await deploy({
+    ns,
+    script,
+    host
+  });
   
   return true;
 };
 
-const upgrade = async ns => {
+const upgrade = async (ns, script) => {
 
   const servers = ns.getPurchasedServers();
-  const costs = servers.map(server => analyze(ns, server));
+  const costs = servers.map(server => project(ns, server));
 
   const {
     host,
@@ -55,10 +68,15 @@ const upgrade = async ns => {
   }
 
   ns.upgradePurchasedServer(host, ram);
-  deploy(ns, host);
+
+  await deploy({
+    ns,
+    script,
+    host
+  });
 }
 
-const analyze = (ns, host) => {
+const project = (ns, host) => {
 
   const {
     maxRam: ram
@@ -72,20 +90,4 @@ const analyze = (ns, host) => {
     cost,
     ram: nextRam
   };
-};
-
-const deploy = (ns, host) => {
-  
-  const script = ns.args[0];
-  const target = ns.args[1];
-  if (script && target) {
-
-    const scriptRam = ns.getScriptRam(script, host);
-    const availableRam = ns.getServerMaxRam(host) - ns.getServerUsedRam(host);
-
-    const threads = Math.floor(availableRam / scriptRam);
-
-    ns.scp(script, target);
-    ns.exec(script, host, threads, target)
-  }
 };
