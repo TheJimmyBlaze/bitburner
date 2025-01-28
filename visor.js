@@ -1,5 +1,5 @@
-import { crawl } from '../lib/crawler';
-import { analyze } from '../lib/analyzer';
+import { crawl } from './lib/crawler';
+import { analyze } from './lib/analyzer';
 
 export const main = async ns => {
 
@@ -19,10 +19,10 @@ const update = ns => {
         privateServers: false,
         unhackable: false,
         noFunds: false,
-        maxLevelDifficulty: 0.25,
-        maxSecurityDifficulty: 0.25,
-        maxFundDifficulty: 0.25,
-        maxHackDifficulty: 0.25
+        maxLevelDifficulty: 1,
+        maxSecurityDifficulty: 1,
+        maxFundDifficulty: 1,
+        maxHackDifficulty: 1
     };
 
     const targets = crawl({

@@ -1,11 +1,38 @@
 
-import { crawl } from '../lib/crawler';
+import { crawl } from './lib/crawler';
 
 export const main = async ns => {
-    await burn({ ns });
+
+    ns.disableLog('ALL');
+
+    const skipDelay = ns.args[0] === 'now';
+
+    if (!skipDelay) {
+        const delay = Math.random() * 60000;
+        ns.print(`Delaying: ${ns.tFormat(delay)} before start...`);
+        await ns.sleep(delay);
+    }
+
+    const crawlOptions = {
+        privateServers: false,
+        unhackable: false,
+        noFunds: false,
+        maxLevelDifficulty: 1,
+        maxSecurityDifficulty: 1,
+        maxFundDifficulty: 1,
+        maxHackDifficulty: 1
+    };
+
+    ns.print('Burning...');
+    while(true) {
+        await burn({
+            ns,
+            crawlOptions
+        });
+    }
 };
 
-export const burn = async ({
+const burn = async ({
     ns,
     maxSecurityPercent = 0.99,
     maxFundPercent = 0.99,
