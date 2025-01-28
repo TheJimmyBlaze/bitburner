@@ -34,7 +34,21 @@ export const main = async ns => {
 
 const weaken = async (ns, host) => await ns.weaken(host);
 
-const fund = async (ns, host) => await ns.grow(host);
+const fund = async (ns, host) => {
+
+    const {
+        threads: runningThreads
+    } = ns.getRunningScript(ns.pid);
+
+    const sec = ns.getServerSecurityLevel(host);
+    const nextSec = ns.weakenAnalyze(runningThreads);
+    const minSec = ns.getServerMinSecurityLevel(host);
+    const secPercent = minSec / Math.max(minSec, sec - nextSec);
+
+    if (secPercent < 0.99) return await ns.weaken(host);
+
+    await ns.grow(host);
+}
 
 const hack = async (ns, host) => {
 
@@ -135,6 +149,8 @@ const markTicket = (
         if (!actors.weaken) {
 
             ns.print(`Weakening ${target}...`);
+            ns.setTitle(`Forge ${target} - Weaken`);
+
             action = async () => await weaken(ns, target);
             actors.weaken = ns.pid;
             return true;
@@ -143,6 +159,8 @@ const markTicket = (
         if (!actors.fund) {
 
             ns.print(`Funding ${target}...`);
+            ns.setTitle(`Forge ${target} - Fund`);
+
             action = async () => await fund(ns, target);
             actors.fund = ns.pid;
             return true;
@@ -151,6 +169,8 @@ const markTicket = (
         if (!actors.hack) {
 
             ns.print(`Hacking ${target}...`);
+            ns.setTitle(`Forge ${target} - Hack`);
+
             action = async () => await hack(ns, target);
             actors.hack = ns.pid;
             return true;

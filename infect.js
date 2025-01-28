@@ -43,6 +43,7 @@ const infect = async (ns, host, script) => {
         ns,
         script,
         host,
+        threads: 100,
         killAll: true,
     });
 };

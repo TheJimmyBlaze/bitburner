@@ -17,10 +17,10 @@ export const main = async ns => {
         privateServers: false,
         unhackable: false,
         noFunds: false,
-        maxLevelDifficulty: 1,
-        maxSecurityDifficulty: 1,
-        maxFundDifficulty: 1,
-        maxHackDifficulty: 1
+        // maxLevelDifficulty: 1,
+        // maxSecurityDifficulty: 1,
+        // maxFundDifficulty: 1,
+        // maxHackDifficulty: 1
     };
 
     ns.print('Burning...');
@@ -46,11 +46,11 @@ const burn = async ({
 
     const server = ns.getServer(target);
 
-    if (await ignite(
-        ns,
-        server,
-        minHackPercent
-    )) return;
+    // if (await ignite(
+    //     ns,
+    //     server,
+    //     minHackPercent
+    // )) return;
 
     if (await burnSec(
         ns,

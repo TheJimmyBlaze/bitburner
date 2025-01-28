@@ -72,7 +72,8 @@ const upgrade = async (ns, script) => {
     await deploy({
         ns,
         script,
-        host
+        host,
+        threads: 100
     });
 }
 
