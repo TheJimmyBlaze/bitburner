@@ -11,9 +11,11 @@ export const main = async ns => {
         return;
     }
 
+    const threads = Math.max(1, ns.args[1]);
+
     ns.print('maxing out home server...');
 
     const host = 'home';
-    const instances = await start(ns, script, host);
+    const instances = await start(ns, script, host, threads);
     ns.print(`${instances} scripts started`);
 };

@@ -26,29 +26,36 @@ export const main = async ns => {
 
         while(action) {
             await action();
-            await ns.sleep(1000);
         }
 
         await ns.sleep(60000);
     }
 };
 
-const weaken = async (ns, host) => {
+const weaken = async (ns, host) => await ns.weaken(host);
 
-    await ns.sleep(0);
-    ns.print(`weaken ${host}`);
-};
-
-const fund = async (ns, host) => {
-
-    await ns.sleep(0);
-    ns.print(`fund ${host}`);
-};
+const fund = async (ns, host) => await ns.grow(host);
 
 const hack = async (ns, host) => {
 
-    await ns.sleep(0);
-    ns.print(`hack ${host}`);
+    const funds = ns.getServerMoneyAvailable(host);
+    const maxFunds = ns.getServerMaxMoney(host);
+
+    if (funds < maxFunds * 0.99) return ns.sleep(0);
+
+    const hackPercent = 0.2;
+    const hackFunds = maxFunds * hackPercent;
+
+    const threadsToReachMin = Math.floor(ns.hackAnalyzeThreads(host, hackFunds));
+    if (threadsToReachMin === -1) return ns.sleep(0);
+
+    const {
+        threads: runningThreads
+    } = ns.getRunningScript(ns.pid);
+    const hackThreads = Math.min(threadsToReachMin, runningThreads);
+
+    ns.print(`Hacking \$${ns.formatNumber(funds - hackFunds)} from ${host}`);
+    await ns.hack(host, { threads: hackThreads});
 };
 
 const getTicket = (
@@ -58,6 +65,8 @@ const getTicket = (
 
     const ticket = ns.peek(portNumber);
     if (ticket && ticket !== 'NULL PORT DATA') {
+
+        appendTicket(ns, ticket);
         return ticket;
     }
         
@@ -85,8 +94,6 @@ const checkTicket = (
 
     read();
     write(ticket);
-
-    ns.print(ticket);
     
     return action;
 };
@@ -127,6 +134,7 @@ const markTicket = (
 
         if (!actors.weaken) {
 
+            ns.print(`Weakening ${target}...`);
             action = async () => await weaken(ns, target);
             actors.weaken = ns.pid;
             return true;
@@ -134,6 +142,7 @@ const markTicket = (
 
         if (!actors.fund) {
 
+            ns.print(`Funding ${target}...`);
             action = async () => await fund(ns, target);
             actors.fund = ns.pid;
             return true;
@@ -141,6 +150,7 @@ const markTicket = (
 
         if (!actors.hack) {
 
+            ns.print(`Hacking ${target}...`);
             action = async () => await hack(ns, target);
             actors.hack = ns.pid;
             return true;
